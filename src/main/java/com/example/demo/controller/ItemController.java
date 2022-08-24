@@ -2,11 +2,14 @@ package com.example.demo.controller;
 
 import com.example.demo.exception.ResourcesNotFound;
 import com.example.demo.model.Item;
+import com.example.demo.projection.ItemDTO;
 import com.example.demo.repository.ItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping(path = "/item")
@@ -19,8 +22,29 @@ public class ItemController {
     }
     //get all items
     @GetMapping(path = "/all")
-    public @ResponseBody Iterable <Item> getAllItems() {
-        return itemRepository.findAll();
+    public @ResponseBody Iterable <ItemDTO> getAllItems() {
+
+       return itemRepository.findAll().stream().map(item -> new ItemDTO() {
+             @Override
+             public Long getId() {
+                 return item.getId();
+             }
+
+             @Override
+             public String getName() {
+                 return item.getName();
+             }
+
+             @Override
+             public Long getQuantity() {
+                 return item.getQuantity();
+             }
+
+             @Override
+             public Double getPrice() {
+                 return item.getPrice();
+             }
+         }).collect(Collectors.toList());
     }
     //get item by id
     @GetMapping(path = "/{id}")

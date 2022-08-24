@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.*;
 
 import javax.persistence.*;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 
@@ -11,28 +12,30 @@ import java.util.Set;
 public class Item {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     private String name;
     private long quantity;
     private double price;
-//    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
-//    private Set<PurchaseDetails> purchaseDetails;
-    @ManyToMany(mappedBy = "items")
-    @JsonIgnore
-    private Set<Purchases> purchases = new java.util.LinkedHashSet<>();
 
-//    public Set<PurchaseDetails> getPurchaseDetails() {
-//        return purchaseDetails;
-//    }
-//    public void setPurchaseDetails(Set<PurchaseDetails> purchaseDetails) {
-//        this.purchaseDetails = purchaseDetails;
-//    }
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonManagedReference(value = "itemPurchaseDetails") // link the item to the purchase details
+    private Set<PurchaseDetails> purchaseDetails;
+//    @ManyToMany(mappedBy = "items")
+//    @JsonIgnore
+//    private Set<Purchases> purchases = new java.util.LinkedHashSet<>();
 
-    public long getId() {
+    public Set<PurchaseDetails> getPurchaseDetails() {
+        return purchaseDetails;
+    }
+    public void setPurchaseDetails(Set<PurchaseDetails> purchaseDetails) {
+        this.purchaseDetails = purchaseDetails;
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -60,13 +63,13 @@ public class Item {
         this.price = price;
     }
 
-    public Set<Purchases> getPurchases() {
-        return purchases;
-    }
-
-    public void setPurchases(Set<Purchases> purchases) {
-        this.purchases = purchases;
-    }
+//    public Set<Purchases> getPurchases() {
+//        return purchases;
+//    }
+//
+//    public void setPurchases(Set<Purchases> purchases) {
+//        this.purchases = purchases;
+//    }
 
     @Override
     public String toString() {
@@ -74,8 +77,8 @@ public class Item {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", quantity=" + quantity +
-                ",purchases=" + purchases +
                 ", price=" + price +
+                ", purchaseDetails=" + purchaseDetails +
                 '}';
     }
     @Override
@@ -84,15 +87,13 @@ public class Item {
         if (o == null || getClass() != o.getClass()) return false;
         Item item = (Item) o;
         return id == item.id &&
+                quantity == item.quantity &&
+                Double.compare(item.price, price) == 0 &&
                 name.equals(item.name);
     }
-//    @Override
-//    public int hashCode() {
-//        return (int) (id ^ (id >>> 32));
-//    }
-//    @PreRemove
-//    public void preRemove() {
-//        purchases.forEach(purchase -> purchase.getItems().remove(this));
-//    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, quantity, price);
+    }
 
 }

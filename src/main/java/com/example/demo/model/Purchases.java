@@ -16,31 +16,32 @@ public class Purchases {
     private long id;
     @ManyToOne
     @JoinColumn(name = "customer_id", referencedColumnName = "id", insertable = false,updatable = false)
-    @JsonBackReference // to avoid circular reference in json response (customer -> purchases -> customer)
+    @JsonBackReference(value = "customerPurchase") // to avoid circular reference in json response (customer -> purchases -> customer)
     //@JsonBackReference is better than @JsonIgnore because it is the way to go.
     private Customer customer;
 
     @Column(name = "customer_id")
     private long customerId;
-//    @OneToMany(mappedBy = "purchases", cascade = CascadeType.ALL)
-//    private Set<PurchaseDetails> purchaseDetails;
-    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.MERGE)
-    @JoinTable(name = "purchase_details",
-            joinColumns = @JoinColumn(name = "purches_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "item_id", referencedColumnName = "id"),
-            uniqueConstraints = @UniqueConstraint(columnNames = {"purches_id", "item_id"}))
-    private Set<Item> items = new java.util.LinkedHashSet<>();
+    @OneToMany(mappedBy = "purchases", cascade = CascadeType.ALL,fetch = FetchType.EAGER, orphanRemoval = true)
+    @JsonManagedReference(value = "purchasesPurchaseDetails") // link the purchases to the purchase details
+    private Set<PurchaseDetails> purchaseDetails;
+//    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.MERGE)
+//    @JoinTable(name = "purchase_details",
+//            joinColumns = @JoinColumn(name = "purches_id", referencedColumnName = "id"),
+//            inverseJoinColumns = @JoinColumn(name = "item_id", referencedColumnName = "id"),
+//            uniqueConstraints = @UniqueConstraint(columnNames = {"purches_id", "item_id"}))
+//    private Set<Item> items = new java.util.LinkedHashSet<>();
     @Temporal(TemporalType.TIMESTAMP)
     @Column(insertable = false, updatable = false)
     private Date date;
     private double amount;
 
-    public Set<Item> getItems() {
-        return items;
-    }
-    public void setItems(Set<Item> items) {
-        this.items = items;
-    }
+//    public Set<Item> getItems() {
+//        return items;
+//    }
+//    public void setItems(Set<Item> items) {
+//        this.items = items;
+//    }
     public double getAmount() {
         return amount;
     }
@@ -48,12 +49,12 @@ public class Purchases {
         this.amount = amount;
     }
 
-//    public Set<PurchaseDetails> getPurchaseDetails() {
-//        return purchaseDetails;
-//    }
-//    public void setPurchaseDetails(Set<PurchaseDetails> purchaseDetails) {
-//        this.purchaseDetails = purchaseDetails;
-//    }
+    public Set<PurchaseDetails> getPurchaseDetails() {
+        return purchaseDetails;
+    }
+    public void setPurchaseDetails(Set<PurchaseDetails> purchaseDetails) {
+        this.purchaseDetails = purchaseDetails;
+    }
 
     public long getId() {
         return id;
@@ -76,23 +77,22 @@ public class Purchases {
         this.date = date;
     }
 
-    @Override
-    public String toString() {
-        return "Purchases{" +
-                "id=" + id +
-                ", customer=" + customer +
-                ", items=" + items +
-                ", date=" + date +
-                ", amount=" + amount +
-                '}';
-    }
-
     public long getCustomerId() {
         return customerId;
     }
 
     public void setCustomerId(long customerId) {
         this.customerId = customerId;
+    }
+
+    @Override
+    public String toString() {
+        return "Purchases{" +
+                "id=" + id +
+                ", customerId=" + customerId +
+                ", purchaseDetails=" + purchaseDetails +
+                ", amount=" + amount +
+                '}';
     }
     @Override
     public boolean equals(Object o) {
@@ -102,13 +102,10 @@ public class Purchases {
         return id == purchases.id &&
                 customerId == purchases.customerId &&
                 Double.compare(purchases.amount, amount) == 0 &&
-                Objects.equals(customer, purchases.customer) &&
-                Objects.equals(items, purchases.items) &&
-                Objects.equals(date, purchases.date);
+                Objects.equals(purchaseDetails, purchases.purchaseDetails);
     }
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(id, customer, items, date, amount);
-//    }
-
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, customerId, purchaseDetails, amount);
+    }
 }

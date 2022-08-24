@@ -62,6 +62,7 @@ public class CustomerController {
 
         customerOrigins.setEmail(cusomerUpdate.getEmail());
         customerOrigins.setPassword(cusomerUpdate.getPassword());
+        customerOrigins.setPurchases(cusomerUpdate.getPurchases());
 
         customerRepository.save(customerOrigins);
 

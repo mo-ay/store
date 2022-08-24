@@ -1,0 +1,60 @@
+package com.example.demo.controller;
+
+import com.example.demo.exception.ResourcesNotFound;
+import com.example.demo.model.Item;
+import com.example.demo.repository.ItemRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+@RequestMapping(path = "/item")
+public class ItemController {
+    //inject ItemRepository
+    private final ItemRepository itemRepository;
+    @Autowired
+    public ItemController(ItemRepository itemRepository) {
+        this.itemRepository = itemRepository;
+    }
+    //get all items
+    @GetMapping(path = "/all")
+    public @ResponseBody Iterable <Item> getAllItems() {
+        return itemRepository.findAll();
+    }
+    //get item by id
+    @GetMapping(path = "/{id}")
+    public @ResponseBody ResponseEntity<Item> getItem(@PathVariable long id) {
+        Item item= itemRepository.findById(id).
+                orElseThrow(() -> new ResourcesNotFound("Item not found id: " + id));
+        return ResponseEntity.ok().body(item);
+    }
+    //delete item by id
+    @DeleteMapping(path = "/{id}")
+    public @ResponseBody ResponseEntity<Item> deleteItem(@PathVariable long id) {
+        Item item= itemRepository.findById(id).
+                orElseThrow(() -> new ResourcesNotFound("Item not found id: " + id));
+        itemRepository.delete(item);
+        return ResponseEntity.ok().body(item);
+    }
+    //update item by id
+    @PutMapping(path = "/{id}")
+    public @ResponseBody ResponseEntity<Item> updateItem(@PathVariable long id, @RequestBody Item itemUpdate) {
+        Item itemOrigins= itemRepository.findById(id).
+                orElseThrow(() -> new ResourcesNotFound("Item not found id: " + id));
+
+        itemOrigins.setName(itemUpdate.getName());
+        itemOrigins.setPrice(itemUpdate.getPrice());
+        itemOrigins.setQuantity(itemUpdate.getQuantity());
+
+        itemRepository.save(itemOrigins);
+        return ResponseEntity.ok().body(itemOrigins);
+    }
+    //add new item
+    @PostMapping(path = "/add")
+    public @ResponseBody String addNewItem(@RequestBody Item item) {
+        itemRepository.save(item);
+        return "Item created successfully";
+    }
+
+}

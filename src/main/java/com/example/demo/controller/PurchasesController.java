@@ -19,6 +19,8 @@ import java.util.Set;
 @RequestMapping(path = "/purchases")
 public class PurchasesController {
     private final PurchasesRepository purchasesRepository;
+    //this is not a good practice to inject controller into another controller
+    //TODO: inject repository into controller instead, Controller considered as presenter!
     private final CustomerController customerController;
     private final ItemRepository itemRepository;
     @Autowired
@@ -40,18 +42,31 @@ public class PurchasesController {
     }
     @PostMapping(path = "/add")
     public @ResponseBody ResponseEntity<Purchases > addNewPurchases(@RequestBody Purchases purchases) {
-        try {
+
+
+            if (customerController.getCustomer(purchases.getCustomerId()).getStatusCode() != HttpStatus.OK ) {
+                throw new ResourcesNotFound("Customer not found id: " + purchases.getCustomerId());
+            }
+
             Set<PurchaseDetails> purchaseDetails = purchases.getPurchaseDetails();
             purchases.setPurchaseDetails(null);
+            if (purchaseDetails==null) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+            }
             purchasesRepository.save(purchases);
             final double[] amount = {0};
             purchaseDetails.forEach(purchaseDetail -> {
                 //check if the item is present in the database
               Item item= itemRepository.findById(purchaseDetail.getItemId())
-                      .orElseThrow(() ->
-                              new ResourcesNotFound("Item not found id: " + purchaseDetail.getItemId()));
+                      .orElseThrow(()->{
+                          //must be cleaned up unsuccessful purchase
+                          deletePurchases(purchases.getId());
+                          throw  new ResourcesNotFound("Item not found id: " + purchaseDetail.getItemId());
+                      });
               //check if the item's quantity is greater than the quantity purchased
               if (item.getQuantity() < purchaseDetail.getQuantity()) {
+                  //must be cleaned up unsuccessful purchase
+                  deletePurchases(purchases.getId());
                   throw new ResourcesNotFound("Not enough quantity for item id: " + purchaseDetail.getItemId());
               }
                 //link the purchase to the purchase details
@@ -61,15 +76,10 @@ public class PurchasesController {
                 item.setQuantity(item.getQuantity() - purchaseDetail.getQuantity());
                 itemRepository.save(item);
             });
-            System.out.println("purchaseDetails: " + purchaseDetails);
             purchases.setAmount(amount[0]);
             purchases.setPurchaseDetails(purchaseDetails);
             purchasesRepository.save(purchases);
 
-        }catch (Exception e) {
-            System.out.println("Error while adding new purchases: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null );
-        }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(purchases);
     }
@@ -80,7 +90,7 @@ public class PurchasesController {
                 orElseThrow(() -> new ResourcesNotFound("Purchases not found id: " + id));
         System.out.println("delete line");
         purchases.getCustomer().getPurchases().remove(purchases);
-        customerController.updateCustomer(purchases.getCustomer().getId(), purchases.getCustomer());
+        customerController.updateCustomerPurchase(purchases.getCustomer().getId(), purchases.getCustomer());
         //not necessary!
         purchasesRepository.delete(purchases);
         return ResponseEntity.ok().body(purchases);
@@ -89,16 +99,9 @@ public class PurchasesController {
     public @ResponseBody ResponseEntity<Purchases> updatePurchases(@PathVariable long id, @RequestBody Purchases purchasesUpdate) {
         Purchases purchasesOrigins= purchasesRepository.findById(id).
                 orElseThrow(() -> new ResourcesNotFound("Purchases not found id: " + id));
-//        purchasesOrigins.setItems(purchasesUpdate.getItems());
-//        purchasesOrigins.setCustomer(purchasesUpdate.getCustomer());
-//        double amount = 0;
-//        for (  Item i : purchasesUpdate.getItems()) {
-//            amount += i.getPrice();
-//        }
-//        purchasesOrigins.setAmount(amount);
-        purchasesOrigins.setDate(purchasesUpdate.getDate());
-        //TODO: update purchases details
-//        purchasesOrigins.setPurchaseDetails(purchasesUpdate.getPurchaseDetails());
+
+        //TODO: update purchases details like the add method without the cleaning process
+        purchasesOrigins.setPurchaseDetails(purchasesUpdate.getPurchaseDetails());
 
         purchasesRepository.save(purchasesOrigins);
         return ResponseEntity.ok().body(purchasesOrigins);

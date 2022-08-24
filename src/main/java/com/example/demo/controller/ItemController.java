@@ -58,7 +58,12 @@ public class ItemController {
     public @ResponseBody ResponseEntity<Item> deleteItem(@PathVariable long id) {
         Item item= itemRepository.findById(id).
                 orElseThrow(() -> new ResourcesNotFound("Item not found id: " + id));
-        itemRepository.delete(item);
+        try {
+            itemRepository.delete(item);
+        } catch (Exception e) {
+            return ResponseEntity.unprocessableEntity().body(item);
+        }
+
         return ResponseEntity.ok().body(item);
     }
     //update item by id

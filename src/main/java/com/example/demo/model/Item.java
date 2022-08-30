@@ -3,7 +3,6 @@ package com.example.demo.model;
 import com.fasterxml.jackson.annotation.*;
 
 import javax.persistence.*;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -18,7 +17,8 @@ public class Item {
     private double price;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JsonManagedReference(value = "itemPurchaseDetails") // link the item to the purchase details
+//    @JsonManagedReference(value = "itemPurchaseDetails") // link the item to the purchase details
+    @JsonIgnore
     private Set<PurchaseDetails> purchaseDetails;
 //    @ManyToMany(mappedBy = "items")
 //    @JsonIgnore

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 
-
+@CrossOrigin(origins = "*", maxAge = 3600)
 @Controller
 @RequestMapping(path = "/purchases")
 public class PurchasesController {
@@ -57,12 +57,12 @@ public class PurchasesController {
             final double[] amount = {0};
             purchaseDetails.forEach(purchaseDetail -> {
                 //check if the item is present in the database
-              Item item= itemRepository.findById(purchaseDetail.getItemId())
-                      .orElseThrow(()->{
-                          //must be cleaned up unsuccessful purchase
-                          deletePurchases(purchases.getId());
-                          throw  new ResourcesNotFound("Item not found id: " + purchaseDetail.getItemId());
-                      });
+              Item item= itemRepository.findById(purchaseDetail.getItemId()).orElse(null);
+              if (item==null) {
+                  //must be cleaned up unsuccessful purchase
+                  deletePurchases(purchases.getId());
+                  throw  new ResourcesNotFound("Item not found id: " + purchaseDetail.getItemId());
+              }
               //check if the item's quantity is greater than the quantity purchased
               if (item.getQuantity() < purchaseDetail.getQuantity()) {
                   //must be cleaned up unsuccessful purchase

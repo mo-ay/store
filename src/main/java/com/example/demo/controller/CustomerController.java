@@ -88,9 +88,9 @@ public class CustomerController {
 
 
     @PostMapping(path = "/add")
-    public @ResponseBody String addNewCustomer(@RequestBody Customer customer) {
+    public @ResponseBody ResponseEntity<Customer> addNewCustomer(@RequestBody Customer customer) {
 
         customerRepository.save(customer);
-        return "Customer Created successfully";
+        return ResponseEntity.ok().body(customer);
     }
 }

@@ -16,7 +16,7 @@ public class PurchaseDetails {
     private Purchases purchases;
     @ManyToOne
     @JoinColumn(name = "item_id", referencedColumnName = "id",insertable = false,updatable = false)
-    @JsonBackReference(value = "itemPurchaseDetails")
+//    @JsonBackReference(value = "itemPurchaseDetails")
     private Item item;
     @Column(name = "purches_id")
     private Long purchaseId;

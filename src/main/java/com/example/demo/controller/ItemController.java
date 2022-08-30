@@ -8,9 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "*", maxAge = 3600)
 @Controller
 @RequestMapping(path = "/item")
 public class ItemController {
@@ -81,9 +81,9 @@ public class ItemController {
     }
     //add new item
     @PostMapping(path = "/add")
-    public @ResponseBody String addNewItem(@RequestBody Item item) {
+    public @ResponseBody ResponseEntity<Item> addNewItem(@RequestBody Item item) {
         itemRepository.save(item);
-        return "Item created successfully";
+        return ResponseEntity.ok().body(item);
     }
 
 }

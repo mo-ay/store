@@ -16,7 +16,7 @@ public class Item {
     private long quantity;
     private double price;
 
-    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 //    @JsonManagedReference(value = "itemPurchaseDetails") // link the item to the purchase details
     @JsonIgnore
     private Set<PurchaseDetails> purchaseDetails;
